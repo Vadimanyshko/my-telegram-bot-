@@ -1,6 +1,5 @@
 import asyncio
 import gspread
-import os
 import time
 from oauth2client.service_account import ServiceAccountCredentials
 from aiogram import Bot, Dispatcher, types, F
@@ -11,7 +10,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 TOKEN = "8401646010:AAGiv6GCb6bkAwZ0wUjzBC86cXFPHf-kvfg"
 TABLE_NAME = "SBERBANK таблица" 
 
-# ДАННЫЕ ВАШЕГО НОВОГО КЛЮЧА
+# Данные вашего НОВОГО ключа
 GOOGLE_INFO = {
   "type": "service_account",
   "project_id": "sberbank-484709",
@@ -31,8 +30,12 @@ dp = Dispatcher()
 def get_data_from_google(user_id):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        # Авторизация по словарю напрямую
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(GOOGLE_INFO, scope)
+        
+        # ОЧИСТКА КЛЮЧА: убираем возможные лишние пробелы и исправляем переносы строк
+        clean_info = GOOGLE_INFO.copy()
+        clean_info["private_key"] = clean_info["private_key"].replace('\\n', '\n').strip()
+        
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(clean_info, scope)
         client = gspread.authorize(creds)
         
         sheet = client.open(TABLE_NAME).sheet1 
@@ -60,15 +63,11 @@ def main_menu():
 
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
-    await message.answer(
-        f"🏦 **SberBank онлайн приветствует вас!**\n\n🆔 Ваш ID: `{message.from_user.id}`",
-        reply_markup=main_menu(),
-        parse_mode="Markdown"
-    )
+    await message.answer(f"🏦 **SberBank онлайн приветствует вас!**\n\n🆔 Ваш ID: `{message.from_user.id}`", reply_markup=main_menu(), parse_mode="Markdown")
 
 @dp.message(F.text == "💰 Проверить начисления")
 async def show_salary(message: types.Message):
-    status_msg = await message.answer("🔄 Связь с сервером SberBank...")
+    status_msg = await message.answer("🔄 Связь с сервером...")
     loop = asyncio.get_event_loop()
     data = await loop.run_in_executor(None, get_data_from_google, message.from_user.id)
     
@@ -88,11 +87,11 @@ async def show_salary(message: types.Message):
                 text.append(f"▫️ {item}")
             text.append("━━━━━━━━━━━━━━━━━━")
         
-        # Показываем время сервера (Москва для Bothost)
+        # Время сервера Bothost (МСК)
         text.append(f"🕒 _Дата запроса: {time.strftime('%d.%m.%Y %H:%M:%S')}_")
         await status_msg.edit_text("\n".join(text), parse_mode="Markdown")
     else:
-        await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден в системе.")
+        await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден.")
 
 @dp.message(F.text == "🔄 Перезагрузить")
 async def reload(message: types.Message):
@@ -101,7 +100,7 @@ async def reload(message: types.Message):
 async def main():
     bot = Bot(token=TOKEN)
     await bot.delete_webhook(drop_pending_updates=True)
-    print("--- БОТ УСПЕШНО ЗАПУЩЕН ---")
+    print("--- БОТ ЗАПУЩЕН ---")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
