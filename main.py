@@ -10,40 +10,40 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.client.session.aiohttp import AiohttpSession
 
 # --- НАСТРОЙКИ ---
-TOKEN = "8401646010:AAGiv6GCb6bkAwZ0wUjzBC86cXFPHf-kvfg"
+TOKEN = "8536656939:AAFw-laE_jlbzYBYd7seZNeAxF_9cn4f_qE"
 TABLE_NAME = "SBERBANK таблица" 
 
 dp = Dispatcher()
 
+# Функция для получения данных из Google Таблиц
 def get_data_from_google(user_id):
     try:
+        # Проверка наличия файла ключей
         if not os.path.exists("creds.json"):
             return "Ошибка: файл creds.json не найден!"
             
-        # Читаем файл как текст, чтобы избежать ошибок кодировки и пустых строк
-        with open("creds.json", "r", encoding="utf-8") as f:
-            content = f.read().strip()
-            if not content:
-                return "Ошибка: файл creds.json пустой!"
-            info = json.loads(content)
-            
-        # Исправляем проблему двойных слешей (\\n -> \n), которая ломает подпись на Linux
-        if "private_key" in info:
-            info["private_key"] = info["private_key"].replace("\\n", "\n")
-        
+        # Настройка доступов
         scopes = [
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
         ]
         
-        # Авторизация через исправленный словарь
-        creds = Credentials.from_service_account_info(info, scopes=scopes)
+        # Читаем файл ключа и исправляем возможные ошибки с переносом строк
+        with open("creds.json", "r", encoding="utf-8") as f:
+            creds_info = json.load(f)
+            
+        if "private_key" in creds_info:
+            creds_info["private_key"] = creds_info["private_key"].replace("\\n", "\n")
+        
+        # Авторизация по новому стандарту (google-auth)
+        creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
         client = gspread.authorize(creds)
         
+        # Открытие таблицы
         sheet = client.open(TABLE_NAME).sheet1 
         all_values = sheet.get_all_values()
         
-        # Поиск пользователя по ID в первой колонке (A)
+        # Поиск пользователя по ID (столбец A)
         for row in all_values[1:]:
             if len(row) < 3: continue
             if str(row[0]).strip() == str(user_id):
@@ -52,7 +52,7 @@ def get_data_from_google(user_id):
                     "total": row[2],
                     "details": []
                 }
-                # Собираем дополнительные данные из колонок D, E, F...
+                # Собираем данные из всех колонок после C (D, E, F...)
                 if len(row) > 3:
                     for extra in row[3:]:
                         if extra.strip():
@@ -60,13 +60,11 @@ def get_data_from_google(user_id):
                 return res
         return None
         
-    except json.JSONDecodeError:
-        return "Ошибка: Некорректный формат JSON в файле creds.json"
     except Exception as e:
-        print(f"DEBUG LOG: {e}")
+        print(f"DEBUG LOG ERROR: {e}")
         return f"Ошибка базы: {str(e)}"
 
-# --- КЛАВИАТУРА ---
+# Главное меню (кнопки)
 def main_menu():
     kb = ReplyKeyboardBuilder()
     kb.button(text="💰 Проверить начисления")
@@ -74,22 +72,23 @@ def main_menu():
     kb.adjust(1)
     return kb.as_markup(resize_keyboard=True)
 
-# --- ОБРАБОТЧИКИ СООБЩЕНИЙ ---
+# Обработка команды /start
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
     welcome_text = (
         f"🏦 **SberBank онлайн приветствует вас!**\n\n"
         f"🆔 Ваш ID: `{message.from_user.id}`\n"
-        f"📊 Состояние: Подключено к системе\n\n"
+        f"📊 Состояние: Подключено к SberBank онлайн\n\n"
         f"Нажмите кнопку ниже, чтобы получить выписку."
     )
     await message.answer(welcome_text, reply_markup=main_menu(), parse_mode="Markdown")
 
+# Обработка кнопки начислений
 @dp.message(F.text == "💰 Проверить начисления")
 async def show_salary(message: types.Message):
     status_msg = await message.answer("🔄 Связь с сервером SberBank...")
     
-    # Запуск поиска данных в отдельном потоке (чтобы бот не зависал)
+    # Запуск поиска данных в отдельном потоке
     loop = asyncio.get_event_loop()
     data = await loop.run_in_executor(None, get_data_from_google, message.from_user.id)
     
@@ -111,6 +110,7 @@ async def show_salary(message: types.Message):
             text.append("━━━━━━━━━━━━━━━━━━")
             
         text.append(f"🕒 _Дата запроса: {time.strftime('%d.%m.%Y %H:%M')}_")
+        
         await status_msg.edit_text("\n".join(text), parse_mode="Markdown")
     else:
         await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден в системе.")
@@ -119,15 +119,15 @@ async def show_salary(message: types.Message):
 async def reload(message: types.Message):
     await start_cmd(message)
 
-# --- ЗАПУСК ---
+# Запуск бота
 async def main():
     session = AiohttpSession()
     bot = Bot(token=TOKEN, session=session)
     
-    # Очистка очереди сообщений перед запуском
+    # Пропускаем накопившиеся сообщения
     await bot.delete_webhook(drop_pending_updates=True)
     
-    print(f"--- БОТ ЗАПУЩЕН УСПЕШНО ---")
+    print(f"--- БОТ УСПЕШНО ЗАПУЩЕН ---")
     
     try:
         await dp.start_polling(bot, polling_timeout=30)
@@ -138,4 +138,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        print("Бот остановлен")
+        print("Бот выключен")
