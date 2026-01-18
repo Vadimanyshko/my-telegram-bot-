@@ -2,7 +2,8 @@ import asyncio
 import gspread
 import os
 import time
-from oauth2client.service_account import ServiceAccountCredentials
+import json
+from google.oauth2.service_account import Credentials
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
@@ -14,14 +15,26 @@ TABLE_NAME = "SBERBANK таблица"
 
 dp = Dispatcher()
 
-# Функция для получения данных из Google Таблиц
 def get_data_from_google(user_id):
     try:
         if not os.path.exists("creds.json"):
-            return "Ошибка: файл creds.json не найден на хостинге!"
+            return "Ошибка: файл creds.json не найден!"
             
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name("creds.json", scope)
+        # Читаем файл как JSON
+        with open("creds.json", "r") as f:
+            info = json.load(f)
+            
+        # ВАЖНО: Исправляем проблему двойных слешей для Linux
+        if "private_key" in info:
+            info["private_key"] = info["private_key"].replace("\\n", "\n")
+        
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+        ]
+        
+        # Авторизация через исправленный словарь
+        creds = Credentials.from_service_account_info(info, scopes=scopes)
         client = gspread.authorize(creds)
         
         sheet = client.open(TABLE_NAME).sheet1 
@@ -35,7 +48,6 @@ def get_data_from_google(user_id):
                     "total": row[2],
                     "details": []
                 }
-                # Собираем данные из всех колонок после C (D, E, F...)
                 if len(row) > 3:
                     for extra in row[3:]:
                         if extra.strip():
@@ -44,9 +56,10 @@ def get_data_from_google(user_id):
         return None
         
     except Exception as e:
+        print(f"DEBUG ERROR: {e}")
         return f"Ошибка базы: {str(e)}"
 
-# Главное меню
+# --- ХЕНДЛЕРЫ ---
 def main_menu():
     kb = ReplyKeyboardBuilder()
     kb.button(text="💰 Проверить начисления")
@@ -54,70 +67,41 @@ def main_menu():
     kb.adjust(1)
     return kb.as_markup(resize_keyboard=True)
 
-# Обработка команды /start
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
-    welcome_text = (
-        f"🏦 **SberBank онлайн приветствует вас!**\n\n"
-        f"🆔 Ваш ID: `{message.from_user.id}`\n"
-        f"📊 Состояние: Подключено к SberBank онлайн\n\n"
-        f"Нажмите кнопку ниже, чтобы получить выписку."
+    await message.answer(
+        f"🏦 **SberBank онлайн приветствует вас!**\n\n🆔 Ваш ID: `{message.from_user.id}`",
+        reply_markup=main_menu(),
+        parse_mode="Markdown"
     )
-    await message.answer(welcome_text, reply_markup=main_menu(), parse_mode="Markdown")
 
-# Обработка кнопки начислений
 @dp.message(F.text == "💰 Проверить начисления")
 async def show_salary(message: types.Message):
     status_msg = await message.answer("🔄 Связь с сервером SberBank...")
-    
-    # Запуск поиска данных
     loop = asyncio.get_event_loop()
     data = await loop.run_in_executor(None, get_data_from_google, message.from_user.id)
     
     if isinstance(data, str):
         await status_msg.edit_text(f"⚠️ {data}")
     elif data:
-        # Формирование красивого сообщения-чека
         text = [
             "✅ **Данные найдены:**",
-            "━━━━━━━━━━━━━━━━━━",
             f"👤 **Сотрудник:** {data['name']}",
-            f"💵 **Сумма к выплате:** {data['total']} руб.",
-            "━━━━━━━━━━━━━━━━━━"
+            f"💵 **Сумма:** {data['total']} руб."
         ]
-        
-        if data['details']:
-            text.append("📅 **Детализация по периодам:**")
-            for item in data['details']:
-                text.append(f"▫️ {item}")
-            text.append("━━━━━━━━━━━━━━━━━━")
-            
-        text.append(f"🕒 _Дата запроса: {time.strftime('%d.%m.%Y %H:%M')}_")
-        
         await status_msg.edit_text("\n".join(text), parse_mode="Markdown")
     else:
-        await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден в системе.")
+        await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден.")
 
 @dp.message(F.text == "🔄 Перезагрузить")
 async def reload(message: types.Message):
     await start_cmd(message)
 
-# Запуск бота
 async def main():
-    # Настройка сессии для стабильной работы на сервере
-    session = AiohttpSession()
-    bot = Bot(token=TOKEN, session=session)
-    
+    bot = Bot(token=TOKEN)
     await bot.delete_webhook(drop_pending_updates=True)
-    print(f"--- БОТ УСПЕШНО ЗАПУЩЕН ---")
-    
-    try:
-        await dp.start_polling(bot, polling_timeout=30)
-    finally:
-        await bot.session.close()
+    print("--- БОТ ЗАПУЩЕН ---")
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        print("Бот выключен")
+    asyncio.run(main())
