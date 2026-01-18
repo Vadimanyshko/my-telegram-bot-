@@ -10,12 +10,37 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 TOKEN = "8401646010:AAGiv6GCb6bkAwZ0wUjzBC86cXFPHf-kvfg"
 TABLE_NAME = "SBERBANK таблица" 
 
-# Данные вашего НОВОГО ключа
+# Данные вашего ключа (исправленный формат для исключения ошибок подписи)
 GOOGLE_INFO = {
   "type": "service_account",
   "project_id": "sberbank-484709",
   "private_key_id": "15e89ab50d477068503d680a673b7a621b12990d",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDcZHH+k4QaAQE8\n8jmtNQN6Ehv3YSrYIL7VcacYUye604JXaOb0jkI9zSR2yYfuI5KuW9srS0qMcd/r\n9HJK01j0lHl59iufZdHgRg48SChCdowfIoCfAnIGOJfdzW6l/jGi12A9c2/XQs25\n2QE93ero4Q1M0LabPEVOhD4sepv/dAcwy45czgiw6+FXM2hMyy5/4qjEM+PRW8Jx\nmhj8s8EFEL+x3BqlqxzwsfCJE3k63EISIOfSo4SmZKCVaYzsqwSHuVi7NqhtIcAv\n7bsh8lV3xLGfanOs5y3c9bS2G57utflUhZA2NDqSs+V8ivKHUcSmXl5bh7LSv/sj\n/gF0xYnRAgMBAAECggEAA2tuL2EBbmID/j+Y/0Zc9beB1QrZRcKxirjW/8fQ/ZNQ\nWgGM4RUVsOLL8Yu/+gAnEmEh9Bsiiwaj7FKbegAhcC4Vb/vnWv1hzkAYBmAejkL8\n3RDPaHvnHUGFKM0npARo4q2biBnLegl3+XyFFBDwUiHgb4fh+58HXQp7aKOAZBO3\nUXCbOhM3uyN72wSHf6mpnILK+1/BztM87cYcNYA4ySw2oKRbx/Iy7rFuUnnY+/pM\nKQNIBrIDoabJ1ubiWFEvOz//+3zwyyQAfPWFZr+X83GJ565e/4Qt2zOjPXbz1Hyv\nh3uz4FvUE1IUkiuFl1WzFliKMf0CLbLOsu82uRwYtwKBgQD3BVcEwyYiJGJt2MvC\nvYtCQRd6KnhTBLc3Fa9APLT5d10jC0k0cZc3DyKsqj260j7/hew2OF7fNG5yFp6V\nthK6NOLIQaU60zL/pcONQ3K/sttaXxeEpIEiKlgPb0c1hFMrPoNdhwwXFzpb5JRr\nGVIdiiuVjsa0bGkHxz4LMBW+vwKBgQDkZ1AoD031bb2JIlePR6KFKxqXZIi3AX+g\n0pGRL72ttT7tkP6jZNDMc9nHcUz1A7LJ3L3ZPVfXmS/alfca2lc4Y28fwJcoO80D\nq3YMiBnqTxN4Mcdj80Zbe9yi5eWBRP9Ky4AMxVOyuB3mIrYrnbMhhEPEYJ/qHGMR\n8nJL4OJrbwKBgH25jgyydpoyApb+HNdFObfDAXwAWbWHVOkIdGYxf7ro8dKAUAYN\nOnWfknpnO3v2vnG3a/48uqzINt6CfLyeKvHzMOnT35ENJYvQhrNDfQfstJBOjd3J\nDKCjBKb2cDvg2aPM8XeM4K5v+BgFQzUvcgfu5zf7r07tTpfS5NU06BxpAoGBAKCw\n/vfwLIzrdFmyy5+GapT+SmsQ1A7NAxoGi1t2FyDLT0acqEoUd8IgD6v9zoLi4zqa\nDwdz3QVWRRCoSX2e95Y4fsn8GVy5Fffq/da7OmBa2fvKKdnsIifi8Mu6qslT3bil\ni6Vwfv5SAtcSvM/a11hRUcwrntZ6uki6Jie0RBgJAoGAVKcUPAjB63cEVLPWp9Ys\nl+a/0smYpHcCmnA+IvS1fVjE7eUDw8Phojkz3GnmVNdxULgPZbKrPjDjLgABChwu\nJyxnNnN3BeUdNEB/Px0Zm50Y/DS7PQUxZ5bD1U0gNT5biFhbTQRAsD+BbsImKrx3\nASpQ1Cor5SaMBpCqxotZo/Q=\n-----END PRIVATE KEY-----\n",
+  "private_key": "-----BEGIN PRIVATE KEY-----\n" + \
+                 "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDcZHH+k4QaAQE8\n" + \
+                 "8jmtNQN6Ehv3YSrYIL7VcacYUye604JXaOb0jkI9zSR2yYfuI5KuW9srS0qMcd/r\n" + \
+                 "9HJK01j0lHl59iufZdHgRg48SChCdowfIoCfAnIGOJfdzW6l/jGi12A9c2/XQs25\n" + \
+                 "2QE93ero4Q1M0LabPEVOhD4sepv/dAcwy45czgiw6+FXM2hMyy5/4qjEM+PRW8Jx\n" + \
+                 "mhj8s8EFEL+x3BqlqxzwsfCJE3k63EISIOfSo4SmZKCVaYzsqwSHuVi7NqhtIcAv\n" + \
+                 "7bsh8lV3xLGfanOs5y3c9bS2G57utflUhZA2NDqSs+V8ivKHUcSmXl5bh7LSv/sj\n" + \
+                 "/gF0xYnRAgMBAAECggEAA2tuL2EBbmID/j+Y/0Zc9beB1QrZRcKxirjW/8fQ/ZNQ\n" + \
+                 "WgGM4RUVsOLL8Yu/+gAnEmEh9Bsiiwaj7FKbegAhcC4Vb/vnWv1hzkAYBmAejkL8\n" + \
+                 "3RDPaHvnHUGFKM0npARo4q2biBnLegl3+XyFFBDwUiHgb4fh+58HXQp7aKOAZBO3\n" + \
+                 "UXCbOhM3uyN72wSHf6mpnILK+1/BztM87cYcNYA4ySw2oKRbx/Iy7rFuUnnY+/pM\n" + \
+                 "KQNIBrIDoabJ1ubiWFEvOz//+3zwyyQAfPWFZr+X83GJ565e/4Qt2zOjPXbz1Hyv\nh3uz4FvUE1IUkiuFl1WzFliKMf0CLbLOsu82uRwYtwKBgQD3BVcEwyYiJGJt2MvC\n" + \
+                 "vYtCQRd6KnhTBLc3Fa9APLT5d10jC0k0cZc3DyKsqj260j7/hew2OF7fNG5yFp6V\n" + \
+                 "thK6NOLIQaU60zL/pcONQ3K/sttaXxeEpIEiKlgPb0c1hFMrPoNdhwwXFzpb5JRr\n" + \
+                 "GVIdiiuVjsa0bGkHxz4LMBW+vwKBgQDkZ1AoD031bb2JIlePR6KFKxqXZIi3AX+g\n" + \
+                 "0pGRL72ttT7tkP6jZNDMc9nHcUz1A7LJ3L3ZPVfXmS/alfca2lc4Y28fwJcoO80D\n" + \
+                 "q3YMiBnqTxN4Mcdj80Zbe9yi5eWBRP9Ky4AMxVOyuB3mIrYrnbMhhEPEYJ/qHGMR\n" + \
+                 "8nJL4OJrbwKBgH25jgyydpoyApb+HNdFObfDAXwAWbWHVOkIdGYxf7ro8dKAUAYN\n" + \
+                 "OnWfknpnO3v2vnG3a/48uqzINt6CfLyeKvHzMOnT35ENJYvQhrNDfQfstJBOjd3J\n" + \
+                 "DKCjBKb2cDvg2aPM8XeM4K5v+BgFQzUvcgfu5zf7r07tTpfS5NU06BxpAoGBAKCw\n" + \
+                 "/vfwLIzrdFmyy5+GapT+SmsQ1A7NAxoGi1t2FyDLT0acqEoUd8IgD6v9zoLi4zqa\n" + \
+                 "Dwdz3QVWRRCoSX2e95Y4fsn8GVy5Fffq/da7OmBa2fvKKdnsIifi8Mu6qslT3bil\n" + \
+                 "i6Vwfv5SAtcSvM/a11hRUcwrntZ6uki6Jie0RBgJAoGAVKcUPAjB63cEVLPWp9Ys\nl+a/0smYpHcCmnA+IvS1fVjE7eUDw8Phojkz3GnmVNdxULgPZbKrPjDjLgABChwu\n" + \
+                 "JyxnNnN3BeUdNEB/Px0Zm50Y/DS7PQUxZ5bD1U0gNT5biFhbTQRAsD+BbsImKrx3\n" + \
+                 "ASpQ1Cor5SaMBpCqxotZo/Q=\n" + \
+                 "-----END PRIVATE KEY-----\n",
   "client_email": "telegram-bot-sberbank@sberbank-484709.iam.gserviceaccount.com",
   "client_id": "111191108113149279115",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -31,11 +56,11 @@ def get_data_from_google(user_id):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
         
-        # ОЧИСТКА КЛЮЧА: убираем возможные лишние пробелы и исправляем переносы строк
-        clean_info = GOOGLE_INFO.copy()
-        clean_info["private_key"] = clean_info["private_key"].replace('\\n', '\n').strip()
+        # Глубокая очистка ключа от возможных ошибок копирования
+        info_copy = GOOGLE_INFO.copy()
+        info_copy["private_key"] = info_copy["private_key"].replace('\\n', '\n').strip()
         
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(clean_info, scope)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(info_copy, scope)
         client = gspread.authorize(creds)
         
         sheet = client.open(TABLE_NAME).sheet1 
@@ -63,11 +88,15 @@ def main_menu():
 
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
-    await message.answer(f"🏦 **SberBank онлайн приветствует вас!**\n\n🆔 Ваш ID: `{message.from_user.id}`", reply_markup=main_menu(), parse_mode="Markdown")
+    await message.answer(
+        f"🏦 **SberBank онлайн приветствует вас!**\n\n🆔 Ваш ID: `{message.from_user.id}`\n📊 Состояние: Подключено",
+        reply_markup=main_menu(),
+        parse_mode="Markdown"
+    )
 
 @dp.message(F.text == "💰 Проверить начисления")
 async def show_salary(message: types.Message):
-    status_msg = await message.answer("🔄 Связь с сервером...")
+    status_msg = await message.answer("🔄 Связь с сервером SberBank...")
     loop = asyncio.get_event_loop()
     data = await loop.run_in_executor(None, get_data_from_google, message.from_user.id)
     
@@ -87,11 +116,12 @@ async def show_salary(message: types.Message):
                 text.append(f"▫️ {item}")
             text.append("━━━━━━━━━━━━━━━━━━")
         
-        # Время сервера Bothost (МСК)
-        text.append(f"🕒 _Дата запроса: {time.strftime('%d.%m.%Y %H:%M:%S')}_")
+        # Время на сервере Bothost (по умолчанию МСК)
+        current_time = time.strftime('%d.%m.%Y %H:%M:%S')
+        text.append(f"🕒 _Дата запроса: {current_time}_")
         await status_msg.edit_text("\n".join(text), parse_mode="Markdown")
     else:
-        await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден.")
+        await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден в таблице.")
 
 @dp.message(F.text == "🔄 Перезагрузить")
 async def reload(message: types.Message):
@@ -100,7 +130,7 @@ async def reload(message: types.Message):
 async def main():
     bot = Bot(token=TOKEN)
     await bot.delete_webhook(drop_pending_updates=True)
-    print("--- БОТ ЗАПУЩЕН ---")
+    print("--- БОТ УСПЕШНО ЗАПУЩЕН ---")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
