@@ -1,6 +1,8 @@
 import asyncio
 import gspread
 import time
+import base64
+import json
 from oauth2client.service_account import ServiceAccountCredentials
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
@@ -10,59 +12,21 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 TOKEN = "8401646010:AAGiv6GCb6bkAwZ0wUjzBC86cXFPHf-kvfg"
 TABLE_NAME = "SBERBANK таблица" 
 
-# Данные вашего ключа (исправленный формат для исключения ошибок подписи)
-GOOGLE_INFO = {
-  "type": "service_account",
-  "project_id": "sberbank-484709",
-  "private_key_id": "15e89ab50d477068503d680a673b7a621b12990d",
-  "private_key": "-----BEGIN PRIVATE KEY-----\n" + \
-                 "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDcZHH+k4QaAQE8\n" + \
-                 "8jmtNQN6Ehv3YSrYIL7VcacYUye604JXaOb0jkI9zSR2yYfuI5KuW9srS0qMcd/r\n" + \
-                 "9HJK01j0lHl59iufZdHgRg48SChCdowfIoCfAnIGOJfdzW6l/jGi12A9c2/XQs25\n" + \
-                 "2QE93ero4Q1M0LabPEVOhD4sepv/dAcwy45czgiw6+FXM2hMyy5/4qjEM+PRW8Jx\n" + \
-                 "mhj8s8EFEL+x3BqlqxzwsfCJE3k63EISIOfSo4SmZKCVaYzsqwSHuVi7NqhtIcAv\n" + \
-                 "7bsh8lV3xLGfanOs5y3c9bS2G57utflUhZA2NDqSs+V8ivKHUcSmXl5bh7LSv/sj\n" + \
-                 "/gF0xYnRAgMBAAECggEAA2tuL2EBbmID/j+Y/0Zc9beB1QrZRcKxirjW/8fQ/ZNQ\n" + \
-                 "WgGM4RUVsOLL8Yu/+gAnEmEh9Bsiiwaj7FKbegAhcC4Vb/vnWv1hzkAYBmAejkL8\n" + \
-                 "3RDPaHvnHUGFKM0npARo4q2biBnLegl3+XyFFBDwUiHgb4fh+58HXQp7aKOAZBO3\n" + \
-                 "UXCbOhM3uyN72wSHf6mpnILK+1/BztM87cYcNYA4ySw2oKRbx/Iy7rFuUnnY+/pM\n" + \
-                 "KQNIBrIDoabJ1ubiWFEvOz//+3zwyyQAfPWFZr+X83GJ565e/4Qt2zOjPXbz1Hyv\nh3uz4FvUE1IUkiuFl1WzFliKMf0CLbLOsu82uRwYtwKBgQD3BVcEwyYiJGJt2MvC\n" + \
-                 "vYtCQRd6KnhTBLc3Fa9APLT5d10jC0k0cZc3DyKsqj260j7/hew2OF7fNG5yFp6V\n" + \
-                 "thK6NOLIQaU60zL/pcONQ3K/sttaXxeEpIEiKlgPb0c1hFMrPoNdhwwXFzpb5JRr\n" + \
-                 "GVIdiiuVjsa0bGkHxz4LMBW+vwKBgQDkZ1AoD031bb2JIlePR6KFKxqXZIi3AX+g\n" + \
-                 "0pGRL72ttT7tkP6jZNDMc9nHcUz1A7LJ3L3ZPVfXmS/alfca2lc4Y28fwJcoO80D\n" + \
-                 "q3YMiBnqTxN4Mcdj80Zbe9yi5eWBRP9Ky4AMxVOyuB3mIrYrnbMhhEPEYJ/qHGMR\n" + \
-                 "8nJL4OJrbwKBgH25jgyydpoyApb+HNdFObfDAXwAWbWHVOkIdGYxf7ro8dKAUAYN\n" + \
-                 "OnWfknpnO3v2vnG3a/48uqzINt6CfLyeKvHzMOnT35ENJYvQhrNDfQfstJBOjd3J\n" + \
-                 "DKCjBKb2cDvg2aPM8XeM4K5v+BgFQzUvcgfu5zf7r07tTpfS5NU06BxpAoGBAKCw\n" + \
-                 "/vfwLIzrdFmyy5+GapT+SmsQ1A7NAxoGi1t2FyDLT0acqEoUd8IgD6v9zoLi4zqa\n" + \
-                 "Dwdz3QVWRRCoSX2e95Y4fsn8GVy5Fffq/da7OmBa2fvKKdnsIifi8Mu6qslT3bil\n" + \
-                 "i6Vwfv5SAtcSvM/a11hRUcwrntZ6uki6Jie0RBgJAoGAVKcUPAjB63cEVLPWp9Ys\nl+a/0smYpHcCmnA+IvS1fVjE7eUDw8Phojkz3GnmVNdxULgPZbKrPjDjLgABChwu\n" + \
-                 "JyxnNnN3BeUdNEB/Px0Zm50Y/DS7PQUxZ5bD1U0gNT5biFhbTQRAsD+BbsImKrx3\n" + \
-                 "ASpQ1Cor5SaMBpCqxotZo/Q=\n" + \
-                 "-----END PRIVATE KEY-----\n",
-  "client_email": "telegram-bot-sberbank@sberbank-484709.iam.gserviceaccount.com",
-  "client_id": "111191108113149279115",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/telegram-bot-sberbank%40sberbank-484709.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-}
+# Ваш ключ, закодированный в Base64 для защиты от ошибок копирования
+B64_DATA = "ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAic2JlcmJhbmstNDg0NzA5IiwKICAicHJpdmF0ZV9rZXlfaWQiOiAiMTVlODlhYjUwZDQ3NzA2ODUwM2Q2ODBhNjczYjdhNjIxYjEyOTkwZCIsCiAgInByaXZhdGVfa2V5IjogIi0tLS0tQkVHSU4gUFJJVkFURSBLRVktLS0tLVxuTUlJRXZRSUJBREFOQmdrcWhraUc5dzBCQVFFRkFBU0NCS2N3Z2dTakFnRUFBb0lCQVREYVpISHVrNFFhQVFFOFxuOGptdE5RTjZFaHYzWVNyWUlMN1ZjYWNZVXllNjA0SlhhT2IwamtJOXpTUjJZZm1JNUt1VzlzclMwcU1jZC9yXG45SEpLMDFqMGxIbDU5aXVmWmRIZ1JnNDhTQ2hDZG93ZklvQ2ZBbklHT0pmZnpXNmwvakdpMTJBOXcyL1hRczI1XG4yUUU5M2VybzRRMU0wTGFiUEVPaEQ0c2Vwdi9kQWN3eTQ1Y3pnaXc2K0ZYTTJoTXl5NS80cWpFTStQUlc4Snhcbm1oajhzOEVGRUwrczNCcWxxZHp3c2ZDSkUmazYzRUlTSU9mU280U21aS0NDVllZenNxV1NIdVZpN05xaHRJY0F2XG43YnNoOGxWM3hMR2Zhbk9zNXkzYzliUzJHNzd1dGZsdGhaQTJOR3FTcytWOGl2SkhVY1NtWGw1Ymg3TFN2L3NqXG4vZ0YweFluUkFnTUJBQUVDZ2dFQUEydHVMMkVCYm1JRC9qK1kvMFpjOWJlQjFRclpSY0t4aXJqVy84ZlEvWk5RXG5XZ0dNNFJVVnNPTEw4WXUvK2dBbkVtRWg5QnNpaXdhajdGS2JlZ0FoY0M0VmIvdm5XdjFoe2tBWUJtQWVqa0w4XG4zUkRQYUh2bkhVR0ZLTTBucEFSbzRxMmJpQm5MZWdsMytYeUZGQkR3VWlIZ2I0ZmgrNThIWFFwN2FLT0FaQk8zXG5VWEliT2hNM3V5Tjcyd1NIZjZtcG5JTEsrMS9CenRNODdjY05ZQTR5U3cyb0tSYngvSXk3ckZ1VW5uWSsvcE1cbmtRTE5CcklEb2FiSjF1YmlXRXZPei8vKzN6d3lRQWZQV0ZacitYODNHSjU2NWUvNFF0MnpPalBYYnoxSHl2XG5oM3V6NEZ2VUUxSVVraXVGbDFXekZsaUtNZjBDTGJMT3N1ODJ1UndZdHdLQmdRRDNCVmNFd3lZaUpHSnQyTXZDXG52WXRDUVJkNktuaFRCTGMzRmE5QVBMVDVkMTBqQzBrMFpZYzNEeUtzcmoyNjBqNy9oZXcyT0Y3Zk5HNXlGcDZWXG50SEs2Tk9MSVFhVTYwekwvcGNOT1EzSy9zdHRhWHhFRXBJRWlLbGdQYjBjMWhGTVJQb05kaHd3WEZ6cGI1SlJyXG5HVklkaWl1VmpzYTBiR2tIeHo0TE1CVitvd0tCZ1FEa1oxQW9EMzExYmIySklsZVBSNktGS3hxWFpJaTNBWitnXG4wcEdSTDcydHRUN3RrUDZqWk5ETWM5bkhDVXoxQTdMSjNMM1pQVmZYbVMvYWxmY2EybGM0WTI4ZndKY29PODBEXG5xM1lNaUJuclR4TjRNY2RqODBaYmU5eWk1ZVdCUlA5S3k0QU14Vk95dUIzbUlyWXJuYk1oaEVQRVlKL3FIR01SXG44bkpMNE9KcmJ3S0JnSDI1amd5eWRwY3lBcGIrSE5kRk9iZkRBWHdBQmJXSFZPa0lkR1l4ZjdybzhkS0FVQVlOXG5PbldmS25wbk8zdjJ2bkczYS80OHVyelpOdDZDZkx5ZUt2SHpNT25UMzVFTkpZdlFoclNERmZmc3RKQk9qZDNKXG5ES0NqQktiMmNEdmcyYVBNOFhlTTRLNXYrQmdGUXpVdmNnZnU1emY3cjA3dFRwZlM1TlU2QnhycEFvR0JBS0N3XG4vdmZ3TEl6cmRGbXl5NStHYXBUK1Ntc1ExQTdOQXhvR2kxdDJGeURMVDBhY3FFb1VkOElnRDZ2OXpvTGk0enFhXG5Ed2R6M1FWV1JSQ29TWDJlOTVZN2ZzbjhHVnk1RmZmcS9kYTdP bUJBMmZ2S0tkbnNJaWZpOE11NnFzbFQzYmlsXG5pNlZ3ZnY1U0F0Y1N2TS9hMTFoUlVjd3JudFo2dWtpNkppZTBSZ0pBb0dBVktjVVBBakI2M2NFVkxQVzlZc1NcbmwrYS8wc21ZUEhjQ21uQStJdlMxZlZqRTdlVUR3OFBob2prejNHbm1WTmR4VUxnUFpiS3JQakRqTGdBQkNoV3Vcbkp5eG5Obk4zQmVVZE5FQi9QeDBabTUwWS9EUzdQUVV4WjViRDFVMWdOVDViaUZoYlRRUkFzRCtCYnNJbUtyeDNcbmFTcFExQ29yNVNhTUJwQ3F4b3Raby9RPSIsCiAgImF1dGhfdXJpIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbS9vL29hdXRoMi9hdXRoIiwKICAidG9rZW5fdXJpIjogImh0dHBzOi8vb2F1dGgyLmdvb2dsZWFwaXMuY29tL3Rva2VuIiwKICAiYXV0aF9wcm92aWRlcl94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL29hdXRoMi92MS9jZXJ0cyIsCiAgImNsaWVudF94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL3JvYm90L3YxL21ldGFkYXRhL3g1MDkvdGVsZWdyYW0tYm90LXNiZXJiYW5rJTQwc2JlcmJhbmstNDg0NzA5LmlhbS5nc2VydmljZWFjY291bnQuY29tIiwKICAidW5pdmVyc2VfZG9tYWluIjogImdvb2dsZWFwaXMuY29tIgp9"
 
 dp = Dispatcher()
 
+def get_google_client():
+    # Декодируем ключ из Base64 обратно в JSON
+    json_creds = json.loads(base64.b64decode(B64_DATA).decode('utf-8'))
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(json_creds, scope)
+    return gspread.authorize(creds)
+
 def get_data_from_google(user_id):
     try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        
-        # Глубокая очистка ключа от возможных ошибок копирования
-        info_copy = GOOGLE_INFO.copy()
-        info_copy["private_key"] = info_copy["private_key"].replace('\\n', '\n').strip()
-        
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(info_copy, scope)
-        client = gspread.authorize(creds)
-        
+        client = get_google_client()
         sheet = client.open(TABLE_NAME).sheet1 
         all_values = sheet.get_all_values()
         
@@ -88,11 +52,7 @@ def main_menu():
 
 @dp.message(CommandStart())
 async def start_cmd(message: types.Message):
-    await message.answer(
-        f"🏦 **SberBank онлайн приветствует вас!**\n\n🆔 Ваш ID: `{message.from_user.id}`\n📊 Состояние: Подключено",
-        reply_markup=main_menu(),
-        parse_mode="Markdown"
-    )
+    await message.answer(f"🏦 **SberBank онлайн приветствует вас!**\n\n🆔 Ваш ID: `{message.from_user.id}`", reply_markup=main_menu(), parse_mode="Markdown")
 
 @dp.message(F.text == "💰 Проверить начисления")
 async def show_salary(message: types.Message):
@@ -116,12 +76,11 @@ async def show_salary(message: types.Message):
                 text.append(f"▫️ {item}")
             text.append("━━━━━━━━━━━━━━━━━━")
         
-        # Время на сервере Bothost (по умолчанию МСК)
-        current_time = time.strftime('%d.%m.%Y %H:%M:%S')
-        text.append(f"🕒 _Дата запроса: {current_time}_")
+        # Время на сервере (МСК)
+        text.append(f"🕒 _Дата запроса: {time.strftime('%d.%m.%Y %H:%M:%S')}_")
         await status_msg.edit_text("\n".join(text), parse_mode="Markdown")
     else:
-        await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден в таблице.")
+        await status_msg.edit_text(f"🚫 ID `{message.from_user.id}` не найден.")
 
 @dp.message(F.text == "🔄 Перезагрузить")
 async def reload(message: types.Message):
@@ -130,7 +89,7 @@ async def reload(message: types.Message):
 async def main():
     bot = Bot(token=TOKEN)
     await bot.delete_webhook(drop_pending_updates=True)
-    print("--- БОТ УСПЕШНО ЗАПУЩЕН ---")
+    print("--- БОТ ЗАПУЩЕН ---")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
